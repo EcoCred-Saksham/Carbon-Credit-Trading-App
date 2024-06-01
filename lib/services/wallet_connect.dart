@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:swachapp/services/constants.dart';
 import 'package:web3dart/web3dart.dart';
 
@@ -18,8 +19,10 @@ Future<String> callFunction(String funcname, List<dynamic> args,
   final result = await ethClient.sendTransaction(
       credentials,
       Transaction.callContract(
-        gasPrice:EtherAmount.fromInt(EtherUnit.gwei,1000 ) ,
-          contract: contract, function: ethFunction, parameters: args),
+          // gasPrice: EtherAmount.fromInt(EtherUnit.gwei, 5000),
+          contract: contract,
+          function: ethFunction,
+          parameters: args),
       chainId: null,
       fetchChainIdFromNetworkId: true);
   return result;
@@ -27,8 +30,12 @@ Future<String> callFunction(String funcname, List<dynamic> args,
 
 Future<String> sendToken(String to, BigInt amount, Web3Client ethClient) async {
   EthereumAddress reciever = EthereumAddress.fromHex(to);
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+  String? privateKeys = prefs.getString('privateKey');
+  print(privateKeys);
   var response = await callFunction(
-      'transfer', [reciever, amount], ethClient, owner_private_key);
+      'transfer', [reciever, amount], ethClient, privateKeys!);
   print('Transaction Successfull');
   print(response);
   return response;

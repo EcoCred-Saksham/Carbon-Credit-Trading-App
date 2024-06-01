@@ -2,26 +2,22 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
-import 'package:swachapp/View/registration.dart';
-import 'package:swachapp/View/wallet_setup_screeen.dart';
+import 'package:swachapp/View/Bid_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class CreateAdvertisement extends StatefulWidget {
+  CreateAdvertisement({super.key, required this.walletId, required this.name});
+  String name;
+  String walletId;
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<CreateAdvertisement> createState() => _CreateAdvertisementState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _CreateAdvertisementState extends State<CreateAdvertisement> {
+  static final _formKeyCreateAd = GlobalKey<FormState>();
   TextEditingController aadhar = TextEditingController();
-  TextEditingController pass = TextEditingController();
-  static final _formKey = GlobalKey<FormState>();
-
-  bool _passwordVisible = false;
-  @override
-  initState() {
-    _passwordVisible = false;
-  }
+  TextEditingController numberOfCredits = TextEditingController();
+  TextEditingController amount = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SingleChildScrollView(
           scrollDirection: Axis.vertical,
           child: Form(
-            key: _formKey,
+            key: _formKeyCreateAd,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -53,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   height: 20,
                 ),
                 Text(
-                  'Getting Started.!',
+                  'Create New Advertisement',
                   style: TextStyle(
                       fontFamily: "Jost",
                       color: Color(0xff202244),
@@ -69,12 +65,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderRadius: BorderRadius.circular(15)),
                   child: TextFormField(
                     style: TextStyle(color: Color(0xff505050)),
-                    controller: aadhar,
+                    controller: numberOfCredits,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return "Please enter the aadhar";
-                      } else if (aadhar.text.length != 12) {
-                        return "Please enter 12 digit aadhar";
+                        return "Please enter a value";
                       }
                       return null;
                     },
@@ -88,7 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       errorBorder: InputFormfieldBorder,
                       focusedErrorBorder: InputFormfieldBorder,
                       border: InputFormfieldBorder,
-                      hintText: "Aadhar Number",
+                      hintText: "Total Number of Credits to be sold",
                       hintStyle: TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 15,
@@ -107,12 +101,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(15)),
                   child: TextFormField(
-                    obscureText: !_passwordVisible,
+                    // obscureText: !_passwordVisible,
                     style: TextStyle(color: Color(0xff505050)),
-                    controller: pass,
+                    controller: amount,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return "Please enter the password";
+                        return "Please enter the amount";
                       }
                       return null;
                     },
@@ -126,29 +120,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       errorBorder: InputFormfieldBorder,
                       focusedErrorBorder: InputFormfieldBorder,
                       border: InputFormfieldBorder,
-                      hintText: "Password",
+                      hintText: "Amount of one credit",
 
-                      hintStyle: TextStyle(
+                      hintStyle: const TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 15,
                         fontWeight: FontWeight.w400,
                         color: Color(0xff505050),
-                      ),
-
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          // Based on passwordVisible state choose the icon
-                          _passwordVisible
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-                          color: Theme.of(context).primaryColorDark,
-                        ),
-                        onPressed: () {
-                          // Update the state i.e. toogle the state of passwordVisible variable
-                          setState(() {
-                            _passwordVisible = !_passwordVisible;
-                          });
-                        },
                       ),
 
                       contentPadding:
@@ -163,71 +141,67 @@ class _LoginScreenState extends State<LoginScreen> {
                   width: width * 0.8,
                   height: height * 0.07,
                   child: ElevatedButton(
-                      style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStatePropertyAll(Color(0xff09891E))),
-                      onPressed: () async {
-                        if (_formKey.currentState!.validate()) {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => WalletSetup(name:"harsh")));
-                          await login(aadhar.text, pass.text);
-                        }
-                      },
-                      child: Row(
-                        children: [
-                          SizedBox(
-                            width: width * 0.05,
+                    style: ButtonStyle(
+                        backgroundColor:
+                            MaterialStatePropertyAll(Color(0xff09891E))),
+                    onPressed: () async {
+                      if (_formKeyCreateAd.currentState!.validate()) {
+                        newAd(widget.walletId, int.parse(amount.text),
+                            int.parse(numberOfCredits.text), widget.name);
+                        Navigator.pop(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BidScreen(
+                              name: widget.name,
+                              walletId: widget.walletId,
+                            ),
                           ),
-                          Text(
-                            'Login and Continue',
-                            style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white),
-                          ),
-                          SizedBox(
-                            width: width * 0.03,
-                          ),
-                          CircleAvatar(
-                            backgroundColor: Colors.white,
-                            child: IconButton(
-                                color: Color(0xff09891E),
-                                onPressed: () async {
-                                  // if (_formKey.currentState!.validate()) {
-                                  //   // print(aadhar.text);
-                                  //   // print(pass.text);
-                                  //   // await login(aadhar.text.toString(),
-                                  //   //     pass.text.toString());
-                                  //   //                             Navigator.push(
-                                  //   // context, MaterialPageRoute(builder: (context) => OtpScreen(aadhar: aadhar.text,)));
-                                  // }
-                                },
-                                icon: Icon(Icons.arrow_forward)),
-                          )
-                        ],
-                      )),
+                        );
+                      }
+                    },
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: width * 0.2,
+                        ),
+                        Text(
+                          'Sign In',
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white),
+                        ),
+                        SizedBox(
+                          width: width * 0.155,
+                        ),
+                        CircleAvatar(
+                          backgroundColor: Colors.white,
+                          child: IconButton(
+                              color: Color(0xff09891E),
+                              onPressed: () async {
+                                if (_formKeyCreateAd.currentState!.validate()) {
+                                  newAd(
+                                      widget.walletId,
+                                      int.parse(amount.text),
+                                      int.parse(numberOfCredits.text),
+                                      widget.name);
+                                  Navigator.pop(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => BidScreen(
+                                        name: widget.name,
+                                        walletId: widget.walletId,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                              icon: Icon(Icons.arrow_forward)),
+                        )
+                      ],
+                    ),
+                  ),
                 ),
-                SizedBox(
-                  height: 10,
-                ),
-                Center(
-                  child: TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => RegisterScreen()));
-                      },
-                      child: Text(
-                        'Don\'t have an account ?',
-                        style: TextStyle(
-                            color: Colors.black,
-                            fontFamily: "Jost",
-                            fontSize: 15),
-                      )),
-                )
               ],
             ),
           ),
@@ -240,22 +214,37 @@ class _LoginScreenState extends State<LoginScreen> {
     borderRadius: BorderRadius.all(Radius.circular(15)),
     borderSide: BorderSide(color: Colors.white, width: 1.0),
   );
-  login(String aadharno, String passss) async {
+  newAd(String walletId, int rate, int credits, String name) async {
     try {
+      // User user=User(name: name, walletId: walletId, numberOfCreds: numberOfCreds, amount: amount)
+//print((walletId+ credits+)  )
       Response response = await post(
-          Uri.parse("https://jwt-auth-4s5w.onrender.com/login"),
-          body: {"aadharNumber": aadharno, "password": passss});
-      print(response.statusCode);
+        Uri.parse("https://welp-backend.onrender.com/wallet"),
+        headers: {
+          'Content-Type': "application/json",
+        },
+        body: jsonEncode(
+          {
+            "wallet_id": walletId,
+            "rate": rate,
+            "no_of_credits": credits,
+            "name": name
+          },
+        ),
+      );
+
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body.toString());
-        print(data['token']);
-        print('Login successfully');
+        print(data['message']);
+        print('successfull');
       } else {
         print('failed');
       }
+      print(response.statusCode);
     } catch (e) {
       print(e.toString());
     }
-    return 1;
+
+    return;
   }
 }

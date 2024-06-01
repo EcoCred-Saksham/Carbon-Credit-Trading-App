@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:swachapp/View/Bid_screen.dart';
 import 'package:swachapp/View/login_screen.dart';
+import 'package:swachapp/View/wallet_setup_screeen.dart';
+import 'package:swachapp/services/model.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -18,6 +20,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   TextEditingController email = TextEditingController();
   TextEditingController phone = TextEditingController();
   TextEditingController name = TextEditingController();
+  TextEditingController publicKey = TextEditingController();
+  TextEditingController privateKey = TextEditingController();
   static final _formKey1 = GlobalKey<FormState>();
   String otherpage = '0';
   bool _passwordVisible = false;
@@ -294,23 +298,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => BidScreen()));
+                                builder: (context) => WalletSetup(name: name.text,)));
                       }
                     },
                     child: Row(
                       children: [
                         SizedBox(
-                          width: width * 0.2,
+                          width: width * 0.1,
                         ),
                         Text(
-                          'Sign In',
+                          'Register and Continue',
                           style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 15,
                               fontWeight: FontWeight.w600,
                               color: Colors.white),
                         ),
                         SizedBox(
-                          width: width * 0.155,
+                          width: width * 0.03,
                         ),
                         CircleAvatar(
                           backgroundColor: Colors.white,
@@ -321,7 +325,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                          builder: (context) => BidScreen()));
+                                          builder: (context) => WalletSetup(name: name.text,)));
                                   if (otherpage == '1') {}
                                   // Navigator.push(
                                   //     context,
@@ -372,6 +376,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   login(String aadharno, String email, String password, String phone,
       String name) async {
     try {
+     
+      // User user=User(name: name, walletId: walletId, numberOfCreds: numberOfCreds, amount: amount)
+
       Response response = await post(
         Uri.parse("https://jwt-auth-4s5w.onrender.com/register"),
         headers: {

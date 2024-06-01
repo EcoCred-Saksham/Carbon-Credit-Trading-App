@@ -1,27 +1,20 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
-import 'package:swachapp/View/registration.dart';
-import 'package:swachapp/View/wallet_setup_screeen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:swachapp/View/Bid_screen.dart';
+import 'package:swachapp/services/model.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class WalletSetup extends StatefulWidget {
+  const WalletSetup({super.key, required this.name});
+  final String name;
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<WalletSetup> createState() => _WalletSetupState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  TextEditingController aadhar = TextEditingController();
-  TextEditingController pass = TextEditingController();
-  static final _formKey = GlobalKey<FormState>();
-
-  bool _passwordVisible = false;
-  @override
-  initState() {
-    _passwordVisible = false;
-  }
+class _WalletSetupState extends State<WalletSetup> {
+  static final _formKeyWallet = GlobalKey<FormState>();
+  TextEditingController privateKey = TextEditingController();
+  TextEditingController publicKey = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SingleChildScrollView(
           scrollDirection: Axis.vertical,
           child: Form(
-            key: _formKey,
+            key: _formKeyWallet,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -53,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   height: 20,
                 ),
                 Text(
-                  'Getting Started.!',
+                  'Enter Wallet Details',
                   style: TextStyle(
                       fontFamily: "Jost",
                       color: Color(0xff202244),
@@ -69,17 +62,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderRadius: BorderRadius.circular(15)),
                   child: TextFormField(
                     style: TextStyle(color: Color(0xff505050)),
-                    controller: aadhar,
+                    controller: publicKey,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return "Please enter the aadhar";
-                      } else if (aadhar.text.length != 12) {
-                        return "Please enter 12 digit aadhar";
+                        return "Please enter the Public Key";
                       }
                       return null;
                     },
                     decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.mail_outline),
+                      prefixIcon: Icon(Icons.lock_open),
                       prefixIconColor: Color(0xff545454),
                       // filled: true,
                       // fillColor: Color(0xffffffff),
@@ -88,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       errorBorder: InputFormfieldBorder,
                       focusedErrorBorder: InputFormfieldBorder,
                       border: InputFormfieldBorder,
-                      hintText: "Aadhar Number",
+                      hintText: "Public Key",
                       hintStyle: TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 15,
@@ -107,17 +98,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(15)),
                   child: TextFormField(
-                    obscureText: !_passwordVisible,
+                    // obscureText: !_passwordVisible,
                     style: TextStyle(color: Color(0xff505050)),
-                    controller: pass,
+                    controller: privateKey,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return "Please enter the password";
+                        return "Please enter the Private Key";
                       }
                       return null;
                     },
                     decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.mail_outline),
+                      prefixIcon: Icon(Icons.lock),
                       prefixIconColor: Color(0xff545454),
                       // filled: true,
                       // fillColor: Color(0xffffffff),
@@ -126,29 +117,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       errorBorder: InputFormfieldBorder,
                       focusedErrorBorder: InputFormfieldBorder,
                       border: InputFormfieldBorder,
-                      hintText: "Password",
+                      hintText: "Private Key",
 
-                      hintStyle: TextStyle(
+                      hintStyle: const TextStyle(
                         fontFamily: 'Poppins',
                         fontSize: 15,
                         fontWeight: FontWeight.w400,
                         color: Color(0xff505050),
-                      ),
-
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          // Based on passwordVisible state choose the icon
-                          _passwordVisible
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-                          color: Theme.of(context).primaryColorDark,
-                        ),
-                        onPressed: () {
-                          // Update the state i.e. toogle the state of passwordVisible variable
-                          setState(() {
-                            _passwordVisible = !_passwordVisible;
-                          });
-                        },
                       ),
 
                       contentPadding:
@@ -167,34 +142,54 @@ class _LoginScreenState extends State<LoginScreen> {
                           backgroundColor:
                               MaterialStatePropertyAll(Color(0xff09891E))),
                       onPressed: () async {
-                        if (_formKey.currentState!.validate()) {
+                        if (_formKeyWallet.currentState!.validate()) {
+                          saveKeys(publicKey.text.toString(),
+                              privateKey.text.toString(), widget.name);
                           Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => WalletSetup(name:"harsh")));
-                          await login(aadhar.text, pass.text);
+                                  builder: (context) => BidScreen(
+                                        name: widget.name,
+                                        walletId: publicKey.text,
+                                      )));
                         }
                       },
                       child: Row(
                         children: [
                           SizedBox(
-                            width: width * 0.05,
+                            width: width * 0.2,
                           ),
                           Text(
-                            'Login and Continue',
+                            'Sign In',
                             style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white),
                           ),
                           SizedBox(
-                            width: width * 0.03,
+                            width: width * 0.155,
                           ),
                           CircleAvatar(
                             backgroundColor: Colors.white,
                             child: IconButton(
                                 color: Color(0xff09891E),
                                 onPressed: () async {
+                                  if (_formKeyWallet.currentState!.validate()) {
+                                    await saveKeys(
+                                        publicKey.text.toString(),
+                                        privateKey.text.toString(),
+                                        widget.name);
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => BidScreen(
+                                          name: widget.name,
+                                          walletId: publicKey.text,
+                                        ),
+                                      ),
+                                    );
+                                  }
+
                                   // if (_formKey.currentState!.validate()) {
                                   //   // print(aadhar.text);
                                   //   // print(pass.text);
@@ -212,22 +207,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox(
                   height: 10,
                 ),
-                Center(
-                  child: TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => RegisterScreen()));
-                      },
-                      child: Text(
-                        'Don\'t have an account ?',
-                        style: TextStyle(
-                            color: Colors.black,
-                            fontFamily: "Jost",
-                            fontSize: 15),
-                      )),
-                )
               ],
             ),
           ),
@@ -236,26 +215,21 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Future<void> saveKeys(
+      String publicKey, String privateKey, String name) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('publicKey', publicKey);
+    await prefs.setString('privateKey', privateKey);
+    
+    Map<String, dynamic> user = {
+      "name": name,
+      "walletId": publicKey,
+    };
+    User.fromMap(user);
+  }
+
   InputBorder InputFormfieldBorder = OutlineInputBorder(
     borderRadius: BorderRadius.all(Radius.circular(15)),
     borderSide: BorderSide(color: Colors.white, width: 1.0),
   );
-  login(String aadharno, String passss) async {
-    try {
-      Response response = await post(
-          Uri.parse("https://jwt-auth-4s5w.onrender.com/login"),
-          body: {"aadharNumber": aadharno, "password": passss});
-      print(response.statusCode);
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.body.toString());
-        print(data['token']);
-        print('Login successfully');
-      } else {
-        print('failed');
-      }
-    } catch (e) {
-      print(e.toString());
-    }
-    return 1;
-  }
 }

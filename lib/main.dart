@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
-
-
-import 'package:swachapp/View/Bid_screen.dart';
 import 'package:swachapp/View/registration.dart';
 
-
 void main() async {
-
   runApp(MyApp());
 }
 
@@ -17,6 +12,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Flutter Demo',
         theme: ThemeData(
           // This is the theme of your application.
